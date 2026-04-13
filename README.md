@@ -1,6 +1,6 @@
 # Semi-Supervised Temporal Modeling with First-Principles Intervals and a Mixture of Kumaraswamy Distributions
 
-This repository provides a public re-implementation of the method described in our paper on semi-supervised temporal modeling for sparse-sampling industrial processes. The method integrates first-principles interval construction with a neural network that outputs a mixture of truncated Kumaraswamy distributions.
+This repository provides a public implementation of the method described in our paper on semi-supervised temporal modeling for sparse-sampling industrial processes. The method integrates first-principles interval construction with a neural network that outputs a mixture of truncated Kumaraswamy distributions.
 
 ---
 
