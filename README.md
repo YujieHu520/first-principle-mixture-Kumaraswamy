@@ -2,9 +2,6 @@
 
 This repository provides a public re-implementation of the method described in our paper on semi-supervised temporal modeling for sparse-sampling industrial processes. The method integrates first-principles interval construction with a neural network that outputs a mixture of truncated Kumaraswamy distributions.
 
-> **Note**
-> This repository contains a reconstructed implementation based on the methodology described in the manuscript. It is **not** the original engineering code used in the industrial study.
-
 ---
 
 ## Overview
