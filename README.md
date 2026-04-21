@@ -13,12 +13,18 @@ In many industrial processes, labels are sampled much more sparsely than process
 - The predictive distribution is represented as a **mixture of truncated Kumaraswamy distributions**.
 - Both **labeled** and **unlabeled** samples are used during training.
 
-The repository currently contains four main Python files:
+For demonstration purposes, this repository also includes a synthetic dataset generator. In the toy example, the label intervals are not constructed by directly perturbing the labels. Instead, an interval is first assigned to one variable in the label-generation formula, and the corresponding label interval is then obtained by propagating this variable interval through the same formula. Two kinds of intervals are generated in this way:
+
+- **WFPI**: a wider interval corresponding to a weaker first-principles constraint
+- **SFPI**: a narrower interval corresponding to a stronger first-principles constraint
+
+The repository currently contains five main Python files:
 
 - `Method.py` – the semi-supervised neural model and training procedure  
 - `WFPI.py` – weak first-principles interval construction  
 - `SFPI.py` – strong first-principles interval construction  
-- `Run.py` – a runnable demo script with synthetic data generation and visualization
+- `ToyDataSet.py` – synthetic dataset generation and toy interval construction  
+- `Run.py` – a runnable demo script for training, evaluation, and visualization
 
 ---
 
@@ -26,8 +32,9 @@ The repository currently contains four main Python files:
 
 ```text
 .
-├── Method.py   # Semi-supervised temporal model
-├── WFPI.py     # Weak first-principles interval construction
-├── SFPI.py     # Strong first-principles interval construction
-├── Run.py      # Demo script
+├── Method.py      # Semi-supervised temporal model
+├── WFPI.py        # Weak first-principles interval construction
+├── SFPI.py        # Strong first-principles interval construction
+├── ToyDataSet.py  # Synthetic dataset and toy interval generation
+├── Run.py         # Demo script
 └── README.md
