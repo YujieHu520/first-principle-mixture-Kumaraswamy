@@ -1,5 +1,5 @@
 """
-SFPI.py
+IndustrialCase_SFPI.py
 
 Strong first-principles prediction interval construction.
 The third split may be a test set or an unlabeled pool.
