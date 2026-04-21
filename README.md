@@ -21,8 +21,8 @@ For demonstration purposes, this repository also includes a synthetic dataset ge
 The repository currently contains five main Python files:
 
 - `Method.py` – the semi-supervised neural model and training procedure  
-- `WFPI.py` – weak first-principles interval construction  
-- `SFPI.py` – strong first-principles interval construction  
+- `IndustrialCase_WFPI.py` – weak first-principles interval construction for industrial case in paper
+- `IndustrialCase_SFPI.py` – strong first-principles interval construction for industrial case in paper
 - `ToyDataSet.py` – synthetic dataset generation and toy interval construction  
 - `Run.py` – a runnable demo script for training, evaluation, and visualization
 
@@ -33,8 +33,8 @@ The repository currently contains five main Python files:
 ```text
 .
 ├── Method.py      # Semi-supervised temporal model
-├── WFPI.py        # Weak first-principles interval construction
-├── SFPI.py        # Strong first-principles interval construction
+├── IndustrialCase_WFPI.py        # Weak first-principles interval construction  for industrial case in paper
+├── IndustrialCase_SFPI.py        # Strong first-principles interval construction  for industrial case in paper
 ├── ToyDataSet.py  # Synthetic dataset and toy interval generation
 ├── Run.py         # Demo script
 └── README.md
