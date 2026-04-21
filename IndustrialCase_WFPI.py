@@ -1,5 +1,5 @@
 """
-WFPI.py
+IndustrialCase_WFPI.py
 
 Weak first-principles prediction interval construction.
 The function accepts three splits (train, validation, test-like) and returns
