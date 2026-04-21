@@ -45,9 +45,9 @@ def plot_results(y_true, fp_intervals, result, title, ax):
     ax.fill_between(idx, fp_low, fp_high, alpha=0.18, label="First-principles interval")
     ax.fill_between(idx, pred_low, pred_high, alpha=0.28, label="Prediction interval")
     ax.plot(idx, y_true, linewidth=1.8, label="True value")
-    ax.plot(idx, pred, linewidth=1.6, label="Point prediction")
+    ax.plot(idx, pred, linewidth=1.6, label="Predicted Value")
     ax.set_title(title)
-    ax.set_xlabel("Test sample index")
+    ax.set_xlabel("Sample")
     ax.set_ylabel("Normalized label")
     ax.grid(True, alpha=0.25)
 
@@ -121,9 +121,12 @@ def main():
             f"AvgFPWidth={avg_width(fp[:, 0], fp[:, 1]):.4f}"
         )
 
+    plt.rcParams["font.family"] = "Times New Roman"
+    plt.rcParams["mathtext.fontset"] = "stix"
+    plt.rcParams["axes.unicode_minus"] = False
     fig, axes = plt.subplots(1, 2, figsize=(14, 5), sharey=True)
-    plot_results(y_test, wfpi_labeled["test"], result_w, "Weak interval result", axes[0])
-    plot_results(y_test, sfpi_labeled["test"], result_s, "Strong interval result", axes[1])
+    plot_results(y_test, wfpi_labeled["test"], result_w, "WFPI result", axes[0])
+    plot_results(y_test, sfpi_labeled["test"], result_s, "SFPI result", axes[1])
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="upper center", ncol=4)
     fig.tight_layout(rect=[0, 0, 1, 0.92])

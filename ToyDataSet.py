@@ -4,6 +4,15 @@ ToyDataSet.py
 Synthetic dataset generation and toy first-principles interval construction for
 visual demonstration.
 
+Key idea
+--------
+The label interval is NOT obtained by directly expanding/shrinking y. Instead,
+an interval is imposed on one feature appearing in the label-generation formula.
+Unlike the previous demo, the label-generation formula uses temporal summaries
+computed from the whole input window X[:, :T, :], rather than only the last time
+step. The corresponding y-interval is then obtained by propagating this feature
+interval through the same formula.
+
 Two interval qualities are provided:
 - WFPI: wider feature interval -> wider label interval
 - SFPI: narrower feature interval -> narrower label interval
@@ -18,24 +27,55 @@ import numpy as np
 ArrayDict = Dict[str, np.ndarray]
 
 
-def _compute_y_from_x_last(X: np.ndarray) -> np.ndarray:
-    """Deterministic toy label-generation formula based on the last time step.
+def _temporal_weights(T: int) -> np.ndarray:
+    """Mildly emphasize recent samples while using the full time window."""
+    w = np.linspace(0.6, 1.4, T, dtype=np.float32)
+    w = w / np.sum(w)
+    return w
+
+
+
+def _temporal_features(X: np.ndarray) -> Dict[str, np.ndarray]:
+    """Compute temporal summary features from the whole input window.
+
+    All features are obtained from the previous T time steps, so the synthetic
+    label depends on the whole sequence rather than only the last sample.
     """
-    tmpd_last = X[:, -1, 0]
-    tppd_last = X[:, -1, 1]
-    D_last = X[:, -1, 2]
-    B_last = X[:, -1, 3]
-    F_last = np.clip(X[:, -1, 4], 1e-6, None)
-    extra_last = X[:, -1, 5]
+    X = np.asarray(X, dtype=np.float32)
+    T = X.shape[1]
+    w = _temporal_weights(T)[None, :, None]
+
+    weighted = np.sum(X * w, axis=1)
+
+    feats = {
+        "tmpd": weighted[:, 0],
+        "tppd": weighted[:, 1],
+        "D": weighted[:, 2],
+        "B": weighted[:, 3],
+        "F": np.clip(weighted[:, 4], 1e-6, None),
+        "extra": weighted[:, 5],
+    }
+    return feats
+
+
+
+def _compute_y_from_temporal_x(X: np.ndarray) -> np.ndarray:
+    """Deterministic toy label-generation formula using the full time window.
+
+    The label is generated from temporal summary features extracted from the
+    previous T time steps. This keeps the demo consistent with dynamic modeling.
+    """
+    feats = _temporal_features(X)
 
     y = (
-        0.52 * np.power(1.0 - tppd_last, 1.2)
-        + 0.18 * tmpd_last
-        + 0.10 * (D_last / F_last)
-        + 0.06 * B_last
-        + 0.06 * extra_last
+        0.52 * np.power(1.0 - feats["tppd"], 1.2)
+        + 0.18 * feats["tmpd"]
+        + 0.10 * (feats["D"] / feats["F"])
+        + 0.06 * feats["B"]
+        + 0.06 * feats["extra"]
     )
     return np.clip(y, 0.03, 0.97).astype(np.float32)
+
 
 
 def make_synthetic_dataset(
@@ -68,7 +108,7 @@ def make_synthetic_dataset(
             X[i, :, 4] = np.clip(F, 0.60, 1.40)
             X[i, :, 5] = np.clip(extra, 0.00, 1.00)
 
-        y = _compute_y_from_x_last(X)
+        y = _compute_y_from_temporal_x(X)
         return X, y
 
     X_train, y_train = make_split(n_train)
@@ -78,42 +118,39 @@ def make_synthetic_dataset(
     return X_train, y_train, X_val, y_val, X_test, y_test, X_unlabeled, y_unlabeled_hidden
 
 
-def _interval_from_feature_uncertainty(
-    X: np.ndarray,
-    kind: str,
-    tppd_idx: int = 1,
-) -> np.ndarray:
-    """Construct label intervals by imposing an interval on x (TPPD-like variable).
 
-    The label formula contains the nonlinear term 0.52 * (1 - x)^1.2. Since this
-    term is monotone decreasing in x over [0, 1], an interval on x induces a
+def _interval_from_feature_uncertainty(X: np.ndarray, kind: str) -> np.ndarray:
+    """Construct label intervals by imposing an interval on a temporal feature.
+
+    The selected feature is the temporal summary of the TPPD-like variable.
+    Because the label formula contains the monotone-decreasing term
+    0.52 * (1 - x_tppd)^1.2, an interval on this temporal feature induces a
     closed-form interval on y without directly modifying y.
 
-    kind='weak'  -> wider x-interval (WFPI)
-    kind='strong' -> narrower x-interval (SFPI)
+    kind='weak'  -> wider feature interval (WFPI)
+    kind='strong' -> narrower feature interval (SFPI)
     """
-    X = np.asarray(X, dtype=np.float32)
-    tppd_last = np.clip(X[:, -1, tppd_idx], 0.20, 0.95)
-    tmpd_last = X[:, -1, 0]
-    D_last = X[:, -1, 2]
-    B_last = X[:, -1, 3]
-    F_last = np.clip(X[:, -1, 4], 1e-6, None)
-    extra_last = X[:, -1, 5]
+    feats = _temporal_features(X)
+    x_tppd = np.clip(feats["tppd"], 0.20, 0.95)
 
-    # Width is imposed on x (not on y). WFPI is intentionally wider than SFPI.
     if kind == "weak":
-        dx = 0.20 + 0.020 * np.abs(np.sin(4.0 * tppd_last))
+        dx = 0.30 + 0.020 * np.abs(np.sin(4.0 * x_tppd))
     elif kind == "strong":
-        dx = 0.15 + 0.010 * np.abs(np.sin(4.0 * tppd_last))
+        dx = 0.20 + 0.010 * np.abs(np.sin(4.0 * x_tppd))
     else:
         raise ValueError("kind must be 'weak' or 'strong'.")
 
-    x_low = np.clip(tppd_last - dx, 0.20, 0.95)
-    x_high = np.clip(tppd_last + dx, 0.20, 0.95)
+    x_low = np.clip(x_tppd - dx, 0.20, 0.95)
+    x_high = np.clip(x_tppd + dx, 0.20, 0.95)
 
-    base = 0.18 * tmpd_last + 0.10 * (D_last / F_last) + 0.06 * B_last + 0.06 * extra_last
+    base = (
+        0.18 * feats["tmpd"]
+        + 0.10 * (feats["D"] / feats["F"])
+        + 0.06 * feats["B"]
+        + 0.06 * feats["extra"]
+    )
 
-    # Because g(x) = 0.52 * (1 - x)^1.2 is decreasing in x,
+    # Since g(x) = 0.52 * (1 - x)^1.2 is decreasing in x,
     # y_high corresponds to x_low and y_low corresponds to x_high.
     y_low = base + 0.52 * np.power(1.0 - x_high, 1.2)
     y_high = base + 0.52 * np.power(1.0 - x_low, 1.2)
@@ -123,6 +160,7 @@ def _interval_from_feature_uncertainty(
     y_high = np.maximum(y_high, y_low + 1e-4)
 
     return np.stack([y_low, y_high], axis=1).astype(np.float32)
+
 
 
 def build_toy_intervals(
