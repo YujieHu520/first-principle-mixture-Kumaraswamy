@@ -28,6 +28,58 @@ The repository currently contains five main Python files:
 
 ---
 
+## Method.py Interface
+
+`Method.py` provides the main training and prediction interface of the proposed semi-supervised model. It contains two key components:
+
+- `MethodConfig` – a configuration class for specifying the model architecture and training hyperparameters
+- `fit_predict` – the main function for model training and test-set prediction
+
+### 1. `MethodConfig`
+
+`MethodConfig` is used to define the architectural settings and training hyperparameters of the proposed method. It allows users to adjust the main options of the semi-supervised model without modifying the model source code directly.
+
+Typical configurable items include:
+
+- number of mixture components
+- hidden dimension and number of LSTM layers for the **weight branch**
+- hidden dimension and number of LSTM layers for the **component branches**
+- convolution settings, such as kernel size, stride, and padding
+- labeled and unlabeled batch sizes
+- number of training epochs
+- learning rate and weight decay
+- semi-supervised loss weight
+- prediction interval significance level
+- device setting (`cpu` or `cuda`)
+
+A typical example is:
+
+```python
+from Method import MethodConfig
+
+cfg = MethodConfig(
+    n_components=2,
+    weight_lstm_hidden_dim=32,
+    weight_lstm_layers=1,
+    component_lstm_hidden_dim=32,
+    component_lstm_layers=1,
+    conv_kernel_size=(3, 1),
+    conv_stride=(1, 1),
+    conv_padding=(1, 0),
+    labeled_batch_size=32,
+    unlabeled_batch_size=64,
+    lambda_u=0.3,
+    q_s=0.9,
+    alpha=0.1,
+    epochs=120,
+    learning_rate=1e-3,
+    weight_decay=1e-5,
+    device="cpu",
+    verbose=True,
+)
+
+---
+
 ## Repository Structure
 
 ```text
